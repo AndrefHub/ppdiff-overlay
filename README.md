@@ -9,7 +9,9 @@
 ### 2. Add new widgets
 2.1. All widgets should be located in /static folder so this application can access them
 2.2. Widget should be located in it's own folder and have index.html as it's main page
+
 Project's tree example: 
+```
 .
 ├── ppdiff-overlay.exe
 ├── config.ini
@@ -18,5 +20,5 @@ Project's tree example:
         ├── index.js
         ├── index.css
         └── index.html
-
+```
 ### 3. Run executable and enjoy
