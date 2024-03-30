@@ -7,15 +7,15 @@ import (
 	"golang.org/x/oauth2/clientcredentials"
 )
 
-var __token_config *clientcredentials.Config
+var TokenConfig *clientcredentials.Config
 var Client *http.Client
 
 func SetUp(clientID string, clientSecret string) {
-	__token_config = &clientcredentials.Config{
+	TokenConfig = &clientcredentials.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		TokenURL:     "https://osu.ppy.sh/oauth/token",
 		Scopes:       []string{"public"},
 	}
-	Client = __token_config.Client(context.Background())
+	Client = TokenConfig.Client(context.Background())
 }

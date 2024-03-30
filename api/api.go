@@ -1,24 +1,16 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
-	// "ppdiff-overlay/token"
-	// "bufio"
-	// "encoding/binary"
-	// "errors"
-	// "fmt"
-	// "io"
-	// "log"
-	// "os"
-	// "path/filepath"
-	// "runtime/debug"
-	// "strings"
-	// "time"
-	// "github.com/l3lackShark/gosumemory/memory"
-	// "github.com/k0kubun/pp"
+	"sync"
+	"time"
+
+	"github.com/AndrefHub/ppdiff-overlay/token"
 )
 
 type BasicUserData struct {
@@ -40,15 +32,14 @@ type BasicUserData struct {
 }
 
 func GetOsuUserData(userid string) (*BasicUserData, error) {
-
 	url := fmt.Sprintf("https://osu.ppy.sh/api/v2/users/%s", userid)
 	method := "GET"
 
-	client := &token.Client
+	client := token.TokenConfig.Client(context.Background())
 	req, err := http.NewRequest(method, url, nil)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -56,21 +47,58 @@ func GetOsuUserData(userid string) (*BasicUserData, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
-	fmt.Println(string(body))
+	// log.Println(string(body))
 
 	var data BasicUserData
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, err
 	}
 	return &data, nil
+}
+
+func AddOsuUserDataToChan(userid string, c chan *BasicUserData, wg *sync.WaitGroup) {
+	defer wg.Done()
+	if user, err := GetOsuUserData(userid); err != nil {
+		log.Println(err)
+	} else {
+		c <- user
+	}
+}
+
+// Returns encoded JSON
+func GetUsersData(users ...string) []byte {
+	var wg sync.WaitGroup
+	c := make(chan *BasicUserData, 3)
+	var arr []BasicUserData
+
+	for _, user := range users {
+		wg.Add(1)
+		AddOsuUserDataToChan(string(user), c, &wg)
+		time.Sleep(250 * time.Millisecond)
+	}
+	wg.Wait()
+	close(c)
+
+	for user := range c {
+		arr = append(arr, *user)
+	}
+	if len(arr) == 0 {
+		log.Println("FUCKING HELL WHY IM HERE")
+		return []byte(`{"error": "Failed to get user's data, check your credentials or internet connection"}`)
+	}
+	jsonResponse, err := json.Marshal(arr)
+	if err != nil {
+		log.Println(err)
+	}
+	return jsonResponse
 }
