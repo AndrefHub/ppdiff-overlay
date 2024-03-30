@@ -30,6 +30,9 @@ ClientSecret = dummySecret
 serverip = 127.0.0.1:57275
 cors = false
 
+[Settings]
+AutoUpdate = true
+
 `)
 		if err := ioutil.WriteFile(filepath.Join(exPath, "config.ini"), d, 0644); err != nil {
 			panic(err)

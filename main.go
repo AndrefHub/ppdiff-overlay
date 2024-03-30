@@ -6,7 +6,9 @@ import (
 
 	"github.com/AndrefHub/ppdiff-overlay/config"
 	"github.com/AndrefHub/ppdiff-overlay/token"
+	"github.com/AndrefHub/ppdiff-overlay/updater"
 	"github.com/AndrefHub/ppdiff-overlay/web"
+	"github.com/spf13/cast"
 )
 
 func ChangeLogDestinationToFile() {
@@ -20,6 +22,10 @@ func ChangeLogDestinationToFile() {
 func main() {
 	ChangeLogDestinationToFile()
 	config.Init()
+
+	if cast.ToBool(config.Config["SelfUpdate"]) {
+		updater.DoSelfUpdate()
+	}
 	token.SetUp(config.Config["ClientID"], config.Config["ClientSecret"])
 	web.HTTPServer()
 }
